@@ -1,0 +1,510 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <limits>
+#include <cctype>
+
+using namespace std;
+
+string chuanHoaLoai(string s) {
+    for (int i = 0; i < (int)s.length(); i++) {
+        s[i] = toupper((unsigned char)s[i]);
+    }
+    if (s == "CAR") return "Car";
+    if (s == "MOTORCYCLE") return "Motorcycle";
+    if (s == "BICYCLE") return "Bicycle";
+    return "";
+}
+
+class Vehicle {
+private:
+    int id;
+    string type;
+    int gioVao;
+    int thoiGianDo;
+    double tienPhi;
+    bool trangThai;
+
+public:
+    Vehicle() {
+        id = 0;
+        type = "";
+        gioVao = 0;
+        thoiGianDo = 0;
+        tienPhi = 0;
+        trangThai = false;
+    }
+
+    Vehicle(int ma, string loai, int gio, int tg) {
+        id = ma;
+        type = chuanHoaLoai(loai);
+        gioVao = gio;
+        thoiGianDo = tg;
+        tienPhi = 0;
+        trangThai = true;
+    }
+
+    int getID() const { return id; }
+    void setID(int ma) { id = ma; }
+
+    string getType() const { return type; }
+    void setType(string loai) { type = chuanHoaLoai(loai); }
+
+    int getGioVao() const { return gioVao; }
+    void setGioVao(int gio) { if (gio >= 0 && gio <= 23) gioVao = gio; }
+
+    int getThoiGianDo() const { return thoiGianDo; }
+    void setThoiGianDo(int tg) { if (tg >= 1 && tg <= 23) thoiGianDo = tg; }
+
+    double getTienPhi() const { return tienPhi; }
+    void setTienPhi(double phi) { tienPhi = phi; }
+
+    bool getTrangThai() const { return trangThai; }
+    void setTrangThai(bool st) { trangThai = st; }
+
+    void tinhTien() {
+        double donGia = 0;
+        if (type == "Car") donGia = 6000;
+        else if (type == "Motorcycle") donGia = 4000;
+        else if (type == "Bicycle") donGia = 2000;
+        else {
+            tienPhi = 0;
+            return;
+        }
+
+        bool gioCaoDiem = false;
+        if ((gioVao >= 6 && gioVao < 10) || (gioVao >= 15 && gioVao < 19)) {
+            gioCaoDiem = true;
+        }
+
+        int gioDau = thoiGianDo;
+        if (gioDau > 2) gioDau = 2;
+
+        double phiDau;
+        if (gioCaoDiem) {
+            phiDau = gioDau * donGia * 1.30;
+        } else {
+            phiDau = gioDau * donGia * 0.95;
+        }
+
+        int gioConLai = thoiGianDo - gioDau;
+        double phiConLai = gioConLai * donGia * 0.90;
+
+        tienPhi = phiDau + phiConLai;
+    }
+
+    void xuat() const {
+        if (!trangThai) return;
+        cout << "\nMa xe: " << id;
+        cout << "\nLoai xe: " << type;
+        cout << "\nGio vao: " << gioVao;
+        cout << "\nThoi gian do: " << thoiGianDo << " gio";
+        cout << "\nPhi do xe: " << fixed << setprecision(0) << tienPhi << " VNĐ\n";
+    }
+};
+
+class ParkingLot {
+private:
+    int maBai;
+    char kichThuoc;
+
+    Vehicle xe1, xe2, xe3;
+    bool coXe1, coXe2, coXe3;
+
+public:
+    ParkingLot() {
+        maBai = 0;
+        kichThuoc = 'S';
+        coXe1 = coXe2 = coXe3 = false;
+    }
+
+    ParkingLot(int id, char s) {
+        maBai = id;
+        kichThuoc = toupper((unsigned char)s);
+        coXe1 = coXe2 = coXe3 = false;
+    }
+
+    int getMaBai() const { return maBai; }
+    char getKichThuoc() const { return kichThuoc; }
+
+    int demXe() const {
+        int dem = 0;
+        if (coXe1) dem++;
+        if (coXe2) dem++;
+        if (coXe3) dem++;
+        return dem;
+    }
+
+    bool timXe(int id) const {
+        if (coXe1 && xe1.getID() == id) return true;
+        if (coXe2 && xe2.getID() == id) return true;
+        if (coXe3 && xe3.getID() == id) return true;
+        return false;
+    }
+
+    bool conCho() const {
+        if (kichThuoc == 'S') return !coXe1;
+        if (kichThuoc == 'M') return !coXe1 || !coXe2;
+        if (kichThuoc == 'L') return !coXe1 || !coXe2 || !coXe3;
+        return false;
+    }
+
+    bool themXe(const Vehicle& v) {
+        if (v.getID() <= 0 || v.getType() == "" || timXe(v.getID())) return false;
+
+        Vehicle tmp = v;
+        tmp.setTrangThai(true);
+
+        if (!coXe1) {
+            xe1 = tmp;
+            coXe1 = true;
+            return true;
+        }
+        if ((kichThuoc == 'M' || kichThuoc == 'L') && !coXe2) {
+            xe2 = tmp;
+            coXe2 = true;
+            return true;
+        }
+        if (kichThuoc == 'L' && !coXe3) {
+            xe3 = tmp;
+            coXe3 = true;
+            return true;
+        }
+        return false;
+    }
+
+    bool layXe(int id) {
+        if (coXe1 && xe1.getID() == id) {
+            xe1 = Vehicle();
+            coXe1 = false;
+            return true;
+        }
+        if (coXe2 && xe2.getID() == id) {
+            xe2 = Vehicle();
+            coXe2 = false;
+            return true;
+        }
+        if (coXe3 && xe3.getID() == id) {
+            xe3 = Vehicle();
+            coXe3 = false;
+            return true;
+        }
+        return false;
+    }
+
+    void hienThiTomTat() const {
+        cout << "\nMa bai: " << maBai;
+        cout << "\nKich thuoc: " << kichThuoc;
+        cout << "\nSo xe: " << demXe();
+        if (kichThuoc == 'S') cout << "/1";
+        else if (kichThuoc == 'M') cout << "/2";
+        else cout << "/3";
+        cout << "\n--------------------------";
+    }
+
+    void hienThiChiTiet() const {
+        cout << "\n========== THONG TIN BAI DO ==========";
+        cout << "\nMa bai: " << maBai << " | Size: " << kichThuoc;
+        cout << "\nTong so xe: " << demXe();
+
+        if (coXe1) { cout << "\n\n[Vi tri 1]"; xe1.xuat(); }
+        if (coXe2) { cout << "\n\n[Vi tri 2]"; xe2.xuat(); }
+        if (coXe3) { cout << "\n\n[Vi tri 3]"; xe3.xuat(); }
+        if (demXe() == 0) cout << "\n(Bai trong)";
+        cout << "\n=====================================\n";
+    }
+
+    int xuatXeTheoLoai(string loai) const {
+        int dem = 0;
+        if (coXe1 && xe1.getType() == loai) {
+            cout << "\nBai " << maBai << " - Vi tri 1";
+            xe1.xuat();
+            dem++;
+        }
+        if (coXe2 && xe2.getType() == loai) {
+            cout << "\nBai " << maBai << " - Vi tri 2";
+            xe2.xuat();
+            dem++;
+        }
+        if (coXe3 && xe3.getType() == loai) {
+            cout << "\nBai " << maBai << " - Vi tri 3";
+            xe3.xuat();
+            dem++;
+        }
+        return dem;
+    }
+
+    void tinhTienTheoLoai(string loai, double& tongTien, int& soLuong) const {
+        if (coXe1 && xe1.getType() == loai) {
+            tongTien += xe1.getTienPhi();
+            soLuong++;
+        }
+        if (coXe2 && xe2.getType() == loai) {
+            tongTien += xe2.getTienPhi();
+            soLuong++;
+        }
+        if (coXe3 && xe3.getType() == loai) {
+            tongTien += xe3.getTienPhi();
+            soLuong++;
+        }
+    }
+
+    double getTongPhi() const {
+        double tong = 0;
+        if (coXe1) tong += xe1.getTienPhi();
+        if (coXe2) tong += xe2.getTienPhi();
+        if (coXe3) tong += xe3.getTienPhi();
+        return tong;
+    }
+};
+
+class SystemInterface {
+private:
+    ParkingLot lot1, lot2, lot3;
+    bool coLot1, coLot2, coLot3;
+
+    int nhapSo(string msg) {
+        int n;
+        while (true) {
+            cout << msg;
+            if (cin >> n) return n;
+            cout << "Sai dinh dang! Vui long nhap so nguyen.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+    }
+
+    bool kiemTraMaBai(int id) const {
+        if (coLot1 && lot1.getMaBai() == id) return true;
+        if (coLot2 && lot2.getMaBai() == id) return true;
+        if (coLot3 && lot3.getMaBai() == id) return true;
+        return false;
+    }
+
+    bool kiemTraMaXe(int id) const {
+        if (coLot1 && lot1.timXe(id)) return true;
+        if (coLot2 && lot2.timXe(id)) return true;
+        if (coLot3 && lot3.timXe(id)) return true;
+        return false;
+    }
+
+    void taoBaiMoi() {
+        cout << "\n--- THEM BAI DO ---";
+        if (coLot1 && coLot2 && coLot3) {
+            cout << "\nDa du 3 bai do xe trong he thong!\n";
+            return;
+        }
+
+        int id = nhapSo("\nNhap ma bai: ");
+        if (id <= 0) {
+            cout << "Ma bai khong hop le!\n";
+            return;
+        }
+        if (kiemTraMaBai(id)) {
+            cout << "Ma bai nay da ton tai!\n";
+            return;
+        }
+
+        char s;
+        cout << "Nhap kich thuoc (S/M/L): ";
+        cin >> s;
+        s = toupper((unsigned char)s);
+
+        if (s != 'S' && s != 'M' && s != 'L') {
+            cout << "Kich thuoc sai!\n";
+            return;
+        }
+
+        if (!coLot1) { lot1 = ParkingLot(id, s); coLot1 = true; }
+        else if (!coLot2) { lot2 = ParkingLot(id, s); coLot2 = true; }
+        else if (!coLot3) { lot3 = ParkingLot(id, s); coLot3 = true; }
+
+        cout << "Tao bai thanh cong!\n";
+    }
+
+    void themXe() {
+        cout << "\n--- GUI XE ---";
+        if (!coLot1 && !coLot2 && !coLot3) {
+            cout << "\nChua co bai xe nao ca!\n";
+            return;
+        }
+
+        int id = nhapSo("\nNhap ma xe: ");
+        if (id <= 0 || kiemTraMaXe(id)) {
+            cout << "Ma xe khong hop le hoac da ton tai!\n";
+            return;
+        }
+
+        string loai;
+        cout << "Loai xe (Car/Motorcycle/Bicycle): ";
+        cin >> loai;
+        loai = chuanHoaLoai(loai);
+        if (loai == "") {
+            cout << "Loai xe khong ho tro!\n";
+            return;
+        }
+
+        int gio = nhapSo("Gio vao (0-23): ");
+        if (gio < 0 || gio > 23) {
+            cout << "Gio khong dung!\n";
+            return;
+        }
+
+        int tg = nhapSo("Thoi gian do (1-23 gio): ");
+        if (tg < 1 || tg > 23) {
+            cout << "Thoi gian khong hop le!\n";
+            return;
+        }
+
+        Vehicle v(id, loai, gio, tg);
+        v.tinhTien();
+
+        bool xong = false;
+        if (coLot1 && lot1.themXe(v)) { xong = true; cout << "Da xep vao bai " << lot1.getMaBai(); }
+        else if (coLot2 && lot2.themXe(v)) { xong = true; cout << "Da xep vao bai " << lot2.getMaBai(); }
+        else if (coLot3 && lot3.themXe(v)) { xong = true; cout << "Da xep vao bai " << lot3.getMaBai(); }
+
+        if (xong) {
+            cout << "\nThem xe thanh cong!\n";
+            v.xuat();
+        } else {
+            cout << "\nCac bai do da het cho!\n";
+        }
+    }
+
+    void xoaBai() {
+        cout << "\n--- XOA BAI ---";
+        int id = nhapSo("\nNhap ma bai can xoa: ");
+
+        if (coLot1 && lot1.getMaBai() == id) { lot1 = ParkingLot(); coLot1 = false; cout << "Xoa thanh cong!\n"; return; }
+        if (coLot2 && lot2.getMaBai() == id) { lot2 = ParkingLot(); coLot2 = false; cout << "Xoa thanh cong!\n"; return; }
+        if (coLot3 && lot3.getMaBai() == id) { lot3 = ParkingLot(); coLot3 = false; cout << "Xoa thanh cong!\n"; return; }
+        cout << "Khong tim thay bai!\n";
+    }
+
+    void layXeRa() {
+        cout << "\n--- LAY XE ---";
+        int id = nhapSo("\nNhap ma xe can lay: ");
+
+        if (coLot1 && lot1.layXe(id)) { cout << "Lay xe thanh cong!\n"; return; }
+        if (coLot2 && lot2.layXe(id)) { cout << "Lay xe thanh cong!\n"; return; }
+        if (coLot3 && lot3.layXe(id)) { cout << "Lay xe thanh cong!\n"; return; }
+        cout << "Khong tim thay xe trong he thong!\n";
+    }
+
+    void xemDanhSachBai() const {
+        cout << "\n--- DANH SACH CAC BAI DO ---";
+        bool coBai = false;
+        if (coLot1) { lot1.hienThiTomTat(); coBai = true; }
+        if (coLot2) { lot2.hienThiTomTat(); coBai = true; }
+        if (coLot3) { lot3.hienThiTomTat(); coBai = true; }
+        if (!coBai) cout << "\nChua co bai nao ca!\n";
+        cout << endl;
+    }
+
+    void xemChiTietMotBai() const {
+        int id = const_cast<SystemInterface*>(this)->nhapSo("\nNhap ma bai muon xem: ");
+        if (coLot1 && lot1.getMaBai() == id) { lot1.hienThiChiTiet(); return; }
+        if (coLot2 && lot2.getMaBai() == id) { lot2.hienThiChiTiet(); return; }
+        if (coLot3 && lot3.getMaBai() == id) { lot3.hienThiChiTiet(); return; }
+        cout << "Khong tim thay bai!\n";
+    }
+
+    void timXeTheoLoai() const {
+        string loai;
+        cout << "\nNhap loai xe can tim (Car/Motorcycle/Bicycle): ";
+        cin >> loai;
+        loai = chuanHoaLoai(loai);
+        if (loai == "") {
+            cout << "Loai xe khong hop le!\n";
+            return;
+        }
+
+        int dem = 0;
+        if (coLot1) dem += lot1.xuatXeTheoLoai(loai);
+        if (coLot2) dem += lot2.xuatXeTheoLoai(loai);
+        if (coLot3) dem += lot3.xuatXeTheoLoai(loai);
+
+        if (dem == 0) cout << "Khong co xe nao loai nay!\n";
+        else cout << "\nTim thay " << dem << " xe.\n";
+    }
+
+    void inTb(string ten, double tong, int sl) const {
+        cout << ten << ": ";
+        if (sl == 0) cout << "Khong co\n";
+        else cout << fixed << setprecision(0) << tong / sl << " VNĐ\n";
+    }
+
+    void baoCaoPhi() const {
+        double tCar = 0, tMoto = 0, tBic = 0;
+        int cCar = 0, cMoto = 0, cBic = 0;
+
+        if (coLot1) { lot1.tinhTienTheoLoai("Car", tCar, cCar); lot1.tinhTienTheoLoai("Motorcycle", tMoto, cMoto); lot1.tinhTienTheoLoai("Bicycle", tBic, cBic); }
+        if (coLot2) { lot2.tinhTienTheoLoai("Car", tCar, cCar); lot2.tinhTienTheoLoai("Motorcycle", tMoto, cMoto); lot2.tinhTienTheoLoai("Bicycle", tBic, cBic); }
+        if (coLot3) { lot3.tinhTienTheoLoai("Car", tCar, cCar); lot3.tinhTienTheoLoai("Motorcycle", tMoto, cMoto); lot3.tinhTienTheoLoai("Bicycle", tBic, cBic); }
+
+        cout << "\n=== BAO CAO PHI TRUNG BINH ===";
+        cout << "\nToan he thong:\n";
+        inTb("Car", tCar, cCar);
+        inTb("Motorcycle", tMoto, cMoto);
+        inTb("Bicycle", tBic, cBic);
+
+        cout << "\nChi tiet tung bai:";
+        if (coLot1) {
+            cout << "\n- Bai " << lot1.getMaBai() << " (So xe: " << lot1.demXe() << ", Tong thu: " << lot1.getTongPhi() << " VNĐ)";
+        }
+        if (coLot2) {
+            cout << "\n- Bai " << lot2.getMaBai() << " (So xe: " << lot2.demXe() << ", Tong thu: " << lot2.getTongPhi() << " VNĐ)";
+        }
+        if (coLot3) {
+            cout << "\n- Bai " << lot3.getMaBai() << " (So xe: " << lot3.demXe() << ", Tong thu: " << lot3.getTongPhi() << " VNĐ)";
+        }
+        if (!coLot1 && !coLot2 && !coLot3) cout << "\nChua co du lieu!\n";
+        cout << endl;
+    }
+
+public:
+    SystemInterface() {
+        coLot1 = coLot2 = coLot3 = false;
+    }
+
+    void menu() {
+        int chon;
+        do {
+            cout << "\n===============================";
+            cout << "\n   QUAN LY BAI DO XE (MENU)";
+            cout << "\n===============================";
+            cout << "\n1. Tao bai do";
+            cout << "\n2. Them xe vao bai";
+            cout << "\n3. Xoa bai do";
+            cout << "\n4. Lay xe ra";
+            cout << "\n5. Xem danh sach bai";
+            cout << "\n6. Xem chi tiet xe trong bai";
+            cout << "\n7. Tim xe theo loai";
+            cout << "\n8. Xem bao cao phi";
+            cout << "\n9. Thoat";
+            cout << "\n===============================";
+            
+            chon = nhapSo("\nChon chuc nang: ");
+
+            switch (chon) {
+                case 1: taoBaiMoi(); break;
+                case 2: themXe(); break;
+                case 3: xoaBai(); break;
+                case 4: layXeRa(); break;
+                case 5: xemDanhSachBai(); break;
+                case 6: xemChiTietMotBai(); break;
+                case 7: timXeTheoLoai(); break;
+                case 8: baoCaoPhi(); break;
+                case 9: cout << "\nTam biet!\n"; break;
+                default: cout << "\nLua chon khong hop le!\n";
+            }
+        } while (chon != 9);
+    }
+};
+
+int main() {
+    SystemInterface app;
+    app.menu();
+    return 0;
+}
